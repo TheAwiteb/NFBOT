@@ -70,7 +70,7 @@ def send_notification() -> None:
 
     if last_post.url != CONFIG.post:
         CONFIG.post = last_post.url
-        text = f"منشور جديدة من {BIBLIOGRAM_NITTER.name}:\n{last_post.description}\n\n> {last_post.url.instagram}"
+        text = f"منشور جديد من {BIBLIOGRAM_NITTER.name}:\n{last_post.description}\n\n> {last_post.url.instagram}"
         if last_post.medias:
             if "video" in last_post.medias[0]:
                 BOT.send_video(
