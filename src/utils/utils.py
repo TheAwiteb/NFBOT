@@ -303,7 +303,7 @@ class Config:
 
     @tweet.setter
     def tweet(self, tweet: TwitterUrl) -> None:
-        self.get_key(ConfigKey.TWITTER) # load old values
+        self.get_key(ConfigKey.TWITTER)  # load old values
         self.__last_tweet = tweet
         self.__update_json()
 
@@ -313,6 +313,6 @@ class Config:
 
     @post.setter
     def post(self, post: InstaUrl) -> None:
-        self.get_key(ConfigKey.INSTA) # load old values
+        self.get_key(ConfigKey.INSTA)  # load old values
         self.__last_post = post
         self.__update_json()
