@@ -92,7 +92,10 @@ def send_notification() -> None:
 
 def main() -> None:
     while True:
-        send_notification()
+        try:
+            send_notification()
+        except Exception as err:
+            print(err)
         sleep(int(DOTENV.get("NOTIFICATION_BOT_DELAY", None)))
 
 
