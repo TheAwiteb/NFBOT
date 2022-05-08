@@ -30,7 +30,8 @@
 import os
 import requests
 from json import load, dump
-from typing import List, Optional
+from typing import List, Optional, Union
+from enum import Enum, auto
 from bs4 import BeautifulSoup
 
 __all__ = (
@@ -225,46 +226,93 @@ class BibliogramNitter:
         return f"BibliogramNitter({', '.join(f'{key} = {val}' for key, val in self.__dict__.items())})"
 
 
+class ConfigKey(Enum):
+    TWITTER = auto()
+    INSTA = auto()
+
+
 class Config:
     def __init__(self, filename: str) -> None:
         self.filename = filename
         self.__last_tweet: Optional[TwitterUrl] = None
         self.__last_post: Optional[InstaUrl] = None
 
-    def __update_json(self) -> None:
-        """ Update json file
+    def __read_json(self) -> dict:
+        """ Read json file
+
+        Returns:
+            dict: Json
         """
-        is_new = False
         if not os.path.exists(self.filename):
             with open(self.filename, "w") as f:
-                is_new = True
-
+                dump({}, f)
         with open(self.filename, "r") as f:
-            json: dict = {} if is_new else load(f)
-            json.update(
-                {"tweet": self.__last_tweet.__dict__ if self.__last_tweet else None}
-            )
-            json.update(
-                {"post": self.__last_post.__dict__ if self.__last_post else None}
-            )
+            return load(f)
 
+    def __write_json(self, json: dict) -> None:
+        """ Write json in file
+
+        Args:
+            json (dict): Json to write it
+        """
         with open(self.filename, "w") as f:
             dump(json, f)
 
+    def __update_json(self) -> None:
+        """ Update json file
+        """
+        json = self.__read_json()
+        json.update(
+            {"tweet": self.__last_tweet.__dict__ if self.__last_tweet else None}
+        )
+        json.update({"post": self.__last_post.__dict__ if self.__last_post else None})
+        self.__write_json(json)
+
+    def get_key(self, key: ConfigKey) -> Optional[Union[TwitterUrl, InstaUrl]]:
+        """ Return Url object from json, if is exists
+
+        Args:
+            key (ConfigKey): The Url you want
+
+        Raises:
+            TypeError: if key not 'ConfigKey'
+
+        Returns:
+            Optional[Union[TwitterUrl, InstaUrl]]: The Url if is exists
+        """
+        if key.__class__ == ConfigKey:
+            json = self.__read_json()
+            if json:
+                tweet = json.get("tweet")
+                post = json.get("post")
+                self.__last_tweet = TwitterUrl(**tweet) if tweet else None
+                self.__last_post = InstaUrl(**post) if post else None
+                return (
+                    self.__last_tweet if key is ConfigKey.TWITTER else self.__last_post
+                )
+            else:
+                return None
+        else:
+            raise TypeError(
+                f"'{key.__class__}' invalid key type, should be 'ConfigKey'"
+            )
+
     @property
     def tweet(self) -> Optional[TwitterUrl]:
-        return self.__last_tweet
+        return self.get_key(ConfigKey.TWITTER)
 
     @tweet.setter
     def tweet(self, tweet: TwitterUrl) -> None:
+        self.get_key(ConfigKey.TWITTER) # load old values
         self.__last_tweet = tweet
         self.__update_json()
 
     @property
     def post(self) -> Optional[InstaUrl]:
-        return self.__last_post
+        return self.get_key(ConfigKey.INSTA)
 
     @post.setter
     def post(self, post: InstaUrl) -> None:
+        self.get_key(ConfigKey.INSTA) # load old values
         self.__last_post = post
         self.__update_json()
