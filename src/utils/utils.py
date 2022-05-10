@@ -30,7 +30,7 @@
 import os
 import requests
 from json import load, dump
-from typing import List, Optional, Union
+from typing import Any, List, Optional, Union
 from enum import Enum, auto
 from bs4 import BeautifulSoup
 
@@ -104,25 +104,89 @@ class Tweet:
     def __init__(
         self, description: str, medias: Optional[List[str]], twitter_url: TwitterUrl
     ) -> None:
-        self.url = twitter_url
+        self.twitter_url = (
+            twitter_url
+            if type(twitter_url) == TwitterUrl
+            else TwitterUrl(**twitter_url)
+        )
         self.description = description
         self.medias = medias
 
+    def __members(self) -> List[Any]:
+        return [self.twitter_url, self.description, self.medias]
+
+    def __eq__(self, other: Any) -> bool:
+        """ Return True if any 
+
+        Args:
+            other (Any): Other object
+
+        Returns:
+            bool: True if any 
+        """
+        if isinstance(other, Tweet):
+            return any(
+                map(
+                    lambda objs: objs[0] == objs[1],
+                    zip(self.__members(), other.__members()),
+                )
+            )
+        return False
+
+    def dict(self) -> dict:
+        return {
+            "description": self.description,
+            "medias": self.medias,
+            "twitter_url": self.twitter_url.__dict__,
+        }
+
     def __repr__(self) -> str:
-        return f"Tweet({', '.join(f'{key} = {val}' for key, val in self.__dict__.items())})"
+        return (
+            f"Tweet({', '.join(f'{key} = {val}' for key, val in self.dict().items())})"
+        )
 
 
 class Post:
     def __init__(
         self, description: str, medias: Optional[List[str]], insta_url: InstaUrl
     ) -> None:
-        self.url = insta_url
+        self.insta_url = (
+            insta_url if type(insta_url) == InstaUrl else InstaUrl(**insta_url)
+        )
         self.description = description
         self.medias = medias
 
+    def __members(self) -> List[Any]:
+        return [self.insta_url, self.description, self.medias]
+
+    def __eq__(self, other: Any) -> bool:
+        """ Return True if any 
+
+        Args:
+            other (Any): Other object
+
+        Returns:
+            bool: True if any 
+        """
+        if isinstance(other, Post):
+            return any(
+                map(
+                    lambda objs: objs[0] == objs[1],
+                    zip(self.__members(), other.__members()),
+                )
+            )
+        return False
+
+    def dict(self) -> dict:
+        return {
+            "description": self.description,
+            "medias": self.medias,
+            "insta_url": self.insta_url.__dict__,
+        }
+
     def __repr__(self) -> str:
         return (
-            f"Post({', '.join(f'{key} = {val}' for key, val in self.__dict__.items())})"
+            f"Post({', '.join(f'{key} = {val}' for key, val in self.dict().items())})"
         )
 
 
@@ -234,8 +298,8 @@ class ConfigKey(Enum):
 class Config:
     def __init__(self, filename: str) -> None:
         self.filename = filename
-        self.__last_tweet: Optional[TwitterUrl] = None
-        self.__last_post: Optional[InstaUrl] = None
+        self.__last_tweet: Optional[Tweet] = None
+        self.__last_post: Optional[Post] = None
 
     def __read_json(self) -> dict:
         """ Read json file
@@ -262,13 +326,11 @@ class Config:
         """ Update json file
         """
         json = self.__read_json()
-        json.update(
-            {"tweet": self.__last_tweet.__dict__ if self.__last_tweet else None}
-        )
-        json.update({"post": self.__last_post.__dict__ if self.__last_post else None})
+        json.update({"tweet": self.__last_tweet.dict() if self.__last_tweet else None})
+        json.update({"post": self.__last_post.dict() if self.__last_post else None})
         self.__write_json(json)
 
-    def get_key(self, key: ConfigKey) -> Optional[Union[TwitterUrl, InstaUrl]]:
+    def get_key(self, key: ConfigKey) -> Optional[Union[Tweet, Post]]:
         """ Return Url object from json, if is exists
 
         Args:
@@ -278,15 +340,15 @@ class Config:
             TypeError: if key not 'ConfigKey'
 
         Returns:
-            Optional[Union[TwitterUrl, InstaUrl]]: The Url if is exists
+            Optional[Union[Tweet, Post]]: Tweet or Post if exists
         """
         if key.__class__ == ConfigKey:
             json = self.__read_json()
             if json:
                 tweet = json.get("tweet")
                 post = json.get("post")
-                self.__last_tweet = TwitterUrl(**tweet) if tweet else None
-                self.__last_post = InstaUrl(**post) if post else None
+                self.__last_tweet = Tweet(**tweet) if tweet else None
+                self.__last_post = Post(**post) if post else None
                 return (
                     self.__last_tweet if key is ConfigKey.TWITTER else self.__last_post
                 )
@@ -298,21 +360,21 @@ class Config:
             )
 
     @property
-    def tweet(self) -> Optional[TwitterUrl]:
+    def tweet(self) -> Optional[Tweet]:
         return self.get_key(ConfigKey.TWITTER)
 
     @tweet.setter
-    def tweet(self, tweet: TwitterUrl) -> None:
+    def tweet(self, tweet: Tweet) -> None:
         self.get_key(ConfigKey.TWITTER)  # load old values
         self.__last_tweet = tweet
         self.__update_json()
 
     @property
-    def post(self) -> Optional[InstaUrl]:
+    def post(self) -> Optional[Post]:
         return self.get_key(ConfigKey.INSTA)
 
     @post.setter
-    def post(self, post: InstaUrl) -> None:
+    def post(self, post: Post) -> None:
         self.get_key(ConfigKey.INSTA)  # load old values
         self.__last_post = post
         self.__update_json()

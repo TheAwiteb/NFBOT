@@ -47,56 +47,39 @@ BOT = TeleBot(DOTENV.get("NOTIFICATION_BOT_TOKEN", None))
 def send_notification() -> None:
     last_tweet = BIBLIOGRAM_NITTER.last_nitter_post()
     last_post = BIBLIOGRAM_NITTER.last_bibliogram_post()
-    if last_tweet.url != CONFIG.tweet:
-        CONFIG.tweet = last_tweet.url
-        text = f"تغريدة جديدة من {BIBLIOGRAM_NITTER.name}:\n{last_tweet.description}\n\n> {last_tweet.url.twitter}"
+    chat_id = DOTENV.get("NOTIFICATION_BOT_TELEGRAM_CHANNEL_ID", None)
+
+    if last_tweet != CONFIG.tweet:
+        CONFIG.tweet = last_tweet
+        text = f"تغريدة جديدة من {BIBLIOGRAM_NITTER.name}:\n{last_tweet.description}\n\n> {last_tweet.twitter_url.twitter}"
         if last_tweet.medias:
             if "video" in last_tweet.medias[0]:
-                BOT.send_video(
-                    DOTENV.get("NOTIFICATION_BOT_TELEGRAM_CHANNEL_ID", None),
-                    last_tweet.medias[0],
-                    caption=text,
-                )
+                BOT.send_video(chat_id, last_tweet.medias[0], caption=text)
             else:
-                BOT.send_photo(
-                    DOTENV.get("NOTIFICATION_BOT_TELEGRAM_CHANNEL_ID", None),
-                    last_tweet.medias[0],
-                    caption=text,
-                )
+                BOT.send_photo(chat_id, last_tweet.medias[0], caption=text)
         else:
-            BOT.send_message(
-                DOTENV.get("NOTIFICATION_BOT_TELEGRAM_CHANNEL_ID", None), text
-            )
+            BOT.send_message(chat_id, text)
 
-    if last_post.url != CONFIG.post:
-        CONFIG.post = last_post.url
-        text = f"منشور جديد من {BIBLIOGRAM_NITTER.name}:\n{last_post.description}\n\n> {last_post.url.instagram}"
+    if last_post != CONFIG.post:
+        CONFIG.post = last_post
+        text = f"منشور جديد من {BIBLIOGRAM_NITTER.name}:\n{last_post.description}\n\n> {last_post.insta_url.instagram}"
         if last_post.medias:
             if "video" in last_post.medias[0]:
-                BOT.send_video(
-                    DOTENV.get("NOTIFICATION_BOT_TELEGRAM_CHANNEL_ID", None),
-                    last_post.medias[0],
-                    caption=text,
-                )
+                BOT.send_video(chat_id, last_post.medias[0], caption=text)
             else:
-                BOT.send_photo(
-                    DOTENV.get("NOTIFICATION_BOT_TELEGRAM_CHANNEL_ID", None),
-                    last_post.medias[0],
-                    caption=text,
-                )
+                BOT.send_photo(chat_id, last_post.medias[0], caption=text)
         else:
-            BOT.send_message(
-                DOTENV.get("NOTIFICATION_BOT_TELEGRAM_CHANNEL_ID", None), text
-            )
+            BOT.send_message(chat_id, text)
 
 
 def main() -> None:
+    seconds = int(DOTENV.get("NOTIFICATION_BOT_DELAY", None))
     while True:
         try:
             send_notification()
         except Exception as err:
             print(err)
-        sleep(int(DOTENV.get("NOTIFICATION_BOT_DELAY", None)))
+        sleep(seconds)
 
 
 if __name__ == "__main__":
