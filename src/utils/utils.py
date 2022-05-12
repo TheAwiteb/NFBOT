@@ -243,7 +243,7 @@ class BibliogramNitter:
             raise Exception("All Bibliogram url are down")
         return Content(BeautifulSoup(res.content, "html.parser"), url)
 
-    def last_nitter_post(self) -> Tweet:
+    def last_nitter_post(self) -> Optional[Tweet]:
         """ Returns last tweet from username
 
         Returns:
@@ -255,6 +255,8 @@ class BibliogramNitter:
             if tweet.find("div", class_="pinned"):
                 continue
             break
+        else:
+            return None
         description = tweet.find("div", class_="tweet-content media-body").text
         link = tweet.find("a", class_="tweet-link")["href"]
         medias = list(

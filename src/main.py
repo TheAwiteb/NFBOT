@@ -49,7 +49,7 @@ def send_notification() -> None:
     last_post = BIBLIOGRAM_NITTER.last_bibliogram_post()
     chat_id = DOTENV.get("NOTIFICATION_BOT_TELEGRAM_CHANNEL_ID", None)
 
-    if last_tweet != CONFIG.tweet:
+    if last_tweet and last_tweet != CONFIG.tweet:
         CONFIG.tweet = last_tweet
         text = f"تغريدة جديدة من {BIBLIOGRAM_NITTER.name}:\n{last_tweet.description}\n\n> {last_tweet.twitter_url.twitter}"
         if last_tweet.medias:
