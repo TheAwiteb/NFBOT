@@ -1,0 +1,4 @@
+.env
+lasts.json
+__pycache__/
+venv/
