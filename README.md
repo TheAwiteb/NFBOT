@@ -1,6 +1,6 @@
 <div align="center">
   <h1>NFBOT (Notification Bot)</h1>
-  Telegram bot to send notification from twitter and instagram to telegram channel
+  Telegram bot to send notification from twitter and instagram to telegram chat/group/channel
 </div>
 
 ## Requirements
@@ -14,7 +14,7 @@
 |`NOTIFICATION_BOT_INSTAGRAM_TEMPLATE`|Instagram notification template. see [Instagram Variables](#instagram-template-variables) |No           |`"{POST_DESCRIPTION}\n\n> {INSTAGRAM_LINK}"` |
 |`NOTIFICATION_BOT_TWITTER_USERNAME`  |Twitter username                                                                          |No           | -                                           |
 |`NOTIFICATION_BOT_INSTAGRAM_USERNAME`|Instagram username                                                                        |No           | -                                           |
-|`NOTIFICATION_BOT_TELEGRAM_CHAT_ID`  |Telegram channel or chat [@MyIdBot]                                                       |Yes          | -                                           |
+|`NOTIFICATION_BOT_TELEGRAM_CHAT_ID`  |Telegram chat/group/channel ID [@MyIdBot]                                                 |Yes          | -                                           |
 |`NOTIFICATION_BOT_TOKEN`             |Telegram bot token [@BotFather]                                                           |Yes          | -                                           |
 |`NOTIFICATION_BOT_DELAY`             |The time between each new post check ( in seconds )                                       |No           |120s                                         |
 

@@ -1,5 +1,5 @@
-# NFBOT (Notification Bot) - Is bot to send notification from twitter and instagram to telegram channel
-#      Copyright (C) 2020-2022  <name of author>
+# NFBOT (Notification Bot) - Telegram bot to send notification from twitter and instagram to telegram chat/group/channel
+#      Copyright (C) 2020-2022  TheAwiteb
 
 # This program is free software: you can redistribute it and/or modify it under
 # the terms of the GNU Affero General Public License as published by the Free
