@@ -196,13 +196,11 @@ class BibliogramNitter:
         self,
         twitter_username: Optional[str],
         instagram_username: Optional[str],
-        name: str,
         nitter_links: List[str] = NITTER_LINKS.copy(),
         bibliogram_links: List[str] = BIBLIOGRAM_LINKS.copy(),
     ) -> None:
         self.twitter_username = twitter_username
         self.instagram_username = instagram_username
-        self.name = name
         self.nitter_links = nitter_links
         self.bibliogram_links = bibliogram_links
 
