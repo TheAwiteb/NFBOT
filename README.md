@@ -17,7 +17,6 @@
 |`NOTIFICATION_BOT_TELEGRAM_CHAT_ID`  |Telegram channel or chat [@MyIdBot]                                                       |Yes          | -                                           |
 |`NOTIFICATION_BOT_TOKEN`             |Telegram bot token [@BotFather]                                                           |Yes          | -                                           |
 |`NOTIFICATION_BOT_DELAY`             |The time between each new post check ( in seconds )                                       |No           |120s                                         |
-|`NOTIFICATION_BOT_NAME`              |Name of creator                                                                           |No           |`""`                                         |
 
 [@MyIdBot]: https://t.me/myidbot
 [@BotFather]: https://t.me/botfather
