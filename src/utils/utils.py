@@ -44,6 +44,7 @@ __all__ = (
     "Post",
     "BibliogramNitter",
     "Config",
+    "Services",
 )
 
 NITTER_LINKS = [
@@ -193,8 +194,8 @@ class Post:
 class BibliogramNitter:
     def __init__(
         self,
-        twitter_username: str,
-        instagram_username: str,
+        twitter_username: Optional[str],
+        instagram_username: Optional[str],
         name: str,
         nitter_links: List[str] = NITTER_LINKS.copy(),
         bibliogram_links: List[str] = BIBLIOGRAM_LINKS.copy(),
@@ -249,52 +250,64 @@ class BibliogramNitter:
         Returns:
             Tweet: The last tweet
         """
-        content = self.nitter_page()
-        tweets = content.soup.find("div", class_="timeline")
-        for tweet in tweets.find_all("div", class_="timeline-item"):
-            if tweet.find("div", class_="pinned"):
-                continue
-            break
-        else:
-            return None
-        description = tweet.find("div", class_="tweet-content media-body").text
-        link = tweet.find("a", class_="tweet-link")["href"]
-        medias = list(
-            map(lambda img: content.domain + img["src"], tweet.find_all("img")[1:])
-        )
+        if self.twitter_username:  # else return None
+            content = self.nitter_page()
+            tweets = content.soup.find("div", class_="timeline")
+            if tweets:  # else return None
+                for tweet in tweets.find_all("div", class_="timeline-item") or []:
+                    if tweet.find("div", class_="pinned"):
+                        continue
+                    break
+                else:
+                    return None
+                description = tweet.find("div", class_="tweet-content media-body").text
+                link = tweet.find("a", class_="tweet-link")
+                if link:  # else return None
+                    medias = list(
+                        map(
+                            lambda img: content.domain + img["src"],
+                            tweet.find_all("img")[1:],
+                        )
+                    )
+                    return Tweet(
+                        description,
+                        medias or None,
+                        TwitterUrl(
+                            content.domain + link["href"],
+                            "https://twitter.com" + link["href"],
+                        ),
+                    )
 
-        return Tweet(
-            description,
-            medias or None,
-            TwitterUrl(content.domain + link, "https://twitter.com" + link),
-        )
-
-    def last_bibliogram_post(self) -> Post:
-        content = self.bibliogram_page()
-        last_post = content.soup.find("a", class_="sized-link")
-        link = last_post["href"]
-        post = BeautifulSoup(requests.get(content.domain + link).content, "html.parser")
-        description = post.find(class_="structured-text description").text
-        medias = list(
-            map(
-                lambda img: content.domain + img["src"],
-                post.find_all(class_="sized-image")
-                or post.find_all(class_="sized-video"),
-            )
-        )
-        return Post(
-            description,
-            medias,
-            InstaUrl(content.domain + link, "https://instagram.com" + link),
-        )
+    def last_bibliogram_post(self) -> Optional[Post]:
+        if self.instagram_username:  # else return None
+            content = self.bibliogram_page()
+            last_post = content.soup.find("a", class_="sized-link")
+            link = last_post["href"] if last_post else None
+            if link:  # else return None
+                post = BeautifulSoup(
+                    requests.get(content.domain + link).content, "html.parser"
+                )
+                description = post.find(class_="structured-text description").text
+                medias = list(
+                    map(
+                        lambda img: content.domain + img["src"],
+                        post.find_all(class_="sized-image")
+                        or post.find_all(class_="sized-video"),
+                    )
+                )
+                return Post(
+                    description,
+                    medias,
+                    InstaUrl(content.domain + link, "https://instagram.com" + link),
+                )
 
     def __repr__(self) -> str:
         return f"BibliogramNitter({', '.join(f'{key} = {val}' for key, val in self.__dict__.items())})"
 
 
-class ConfigKey(Enum):
-    TWITTER = auto()
-    INSTA = auto()
+class Services(Enum):
+    Twitter = auto()
+    Instagram = auto()
 
 
 class Config:
@@ -332,19 +345,19 @@ class Config:
         json.update({"post": self.__last_post.dict() if self.__last_post else None})
         self.__write_json(json)
 
-    def get_key(self, key: ConfigKey) -> Optional[Union[Tweet, Post]]:
+    def get_key(self, key: Services) -> Optional[Union[Tweet, Post]]:
         """ Return Url object from json, if is exists
 
         Args:
-            key (ConfigKey): The Url you want
+            key (Services): The Url you want
 
         Raises:
-            TypeError: if key not 'ConfigKey'
+            TypeError: if key not 'Services'
 
         Returns:
             Optional[Union[Tweet, Post]]: Tweet or Post if exists
         """
-        if key.__class__ == ConfigKey:
+        if key.__class__ == Services:
             json = self.__read_json()
             if json:
                 tweet = json.get("tweet")
@@ -352,31 +365,29 @@ class Config:
                 self.__last_tweet = Tweet(**tweet) if tweet else None
                 self.__last_post = Post(**post) if post else None
                 return (
-                    self.__last_tweet if key is ConfigKey.TWITTER else self.__last_post
+                    self.__last_tweet if key is Services.Twitter else self.__last_post
                 )
             else:
                 return None
         else:
-            raise TypeError(
-                f"'{key.__class__}' invalid key type, should be 'ConfigKey'"
-            )
+            raise TypeError(f"'{key.__class__}' invalid key type, should be 'Services'")
 
     @property
     def tweet(self) -> Optional[Tweet]:
-        return self.get_key(ConfigKey.TWITTER)
+        return self.get_key(Services.Twitter)
 
     @tweet.setter
     def tweet(self, tweet: Tweet) -> None:
-        self.get_key(ConfigKey.TWITTER)  # load old values
+        self.get_key(Services.Twitter)  # load old values
         self.__last_tweet = tweet
         self.__update_json()
 
     @property
     def post(self) -> Optional[Post]:
-        return self.get_key(ConfigKey.INSTA)
+        return self.get_key(Services.Instagram)
 
     @post.setter
     def post(self, post: Post) -> None:
-        self.get_key(ConfigKey.INSTA)  # load old values
+        self.get_key(Services.Instagram)  # load old values
         self.__last_post = post
         self.__update_json()
